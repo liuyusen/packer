@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -49,14 +50,14 @@ func (c *WindowsContainerCommunicator) Upload(dst string, src io.Reader, fi *os.
 		Command: fmt.Sprintf("Copy-Item -Path %s/%s -Destination %s", c.ContainerDir,
 			filepath.Base(tempfile.Name()), dst),
 	}
-
-	if err := c.Start(cmd); err != nil {
+	ctx := context.TODO()
+	if err := c.Start(ctx, cmd); err != nil {
 		return err
 	}
 
 	// Wait for the copy to complete
 	cmd.Wait()
-	if cmd.ExitStatus != 0 {
+	if cmd.ExitStatus() != 0 {
 		return fmt.Errorf("Upload failed with non-zero exit status: %d", cmd.ExitStatus)
 	}
 
@@ -135,13 +136,14 @@ func (c *WindowsContainerCommunicator) UploadDir(dst string, src string, exclude
 		Command: fmt.Sprintf("Copy-Item %s -Destination %s -Recurse",
 			containerSrc, containerDst),
 	}
-	if err := c.Start(cmd); err != nil {
+	ctx := context.TODO()
+	if err := c.Start(ctx, cmd); err != nil {
 		return err
 	}
 
 	// Wait for the copy to complete
 	cmd.Wait()
-	if cmd.ExitStatus != 0 {
+	if cmd.ExitStatus() != 0 {
 		return fmt.Errorf("Upload failed with non-zero exit status: %d", cmd.ExitStatus)
 	}
 
@@ -160,14 +162,15 @@ func (c *WindowsContainerCommunicator) Download(src string, dst io.Writer) error
 		Stdout: &stdout,
 		Stderr: &stderr,
 	}
-	if err := c.Start(cmd); err != nil {
+	ctx := context.TODO()
+	if err := c.Start(ctx, cmd); err != nil {
 		return err
 	}
 
 	// Wait for the copy to complete
 	cmd.Wait()
 
-	if cmd.ExitStatus != 0 {
+	if cmd.ExitStatus() != 0 {
 		return fmt.Errorf("Failed to copy file to shared drive: %s, %s, %d", stderr.String(), stdout.String(), cmd.ExitStatus)
 	}
 
